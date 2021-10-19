@@ -33,8 +33,8 @@ contract DSCNFTName is Ownable, IDSCNFTName {
         emit SetMixForDeleting(_mix);
     }
 
-    modifier onlyHolder(address mates, uint256 mateId) {
-        require(IKIP17(mates).ownerOf(mateId) == msg.sender);
+    modifier onlyHolder(address nft, uint256 mateId) {
+        require(IKIP17(nft).ownerOf(mateId) == msg.sender);
         _;
     }
 
@@ -42,30 +42,45 @@ contract DSCNFTName is Ownable, IDSCNFTName {
         return _exists[name];
     }
 
-    function set(address mates, uint256 mateId, string calldata name) onlyHolder(mates, mateId) external {
+    function set(address nft, uint256 mateId, string calldata name) onlyHolder(nft, mateId) external {
         require(_exists[name] != true);
 
-        if (named[mates][mateId] == true) {
-            _exists[names[mates][mateId]] = false;
+        if (named[nft][mateId] == true) {
+            _exists[names[nft][mateId]] = false;
             mix.burnFrom(msg.sender, mixForChanging);
         } else {
-            named[mates][mateId] = true;
+            named[nft][mateId] = true;
         }
 
-        names[mates][mateId] = name;
+        names[nft][mateId] = name;
         _exists[name] = true;
 
-        emit Set(mates, mateId, msg.sender, name);
+        emit Set(nft, mateId, msg.sender, name);
     }
 
-    function remove(address mates, uint256 mateId) onlyHolder(mates, mateId) external {
+    function importFromV1(address nft, uint256 mateId, string calldata name) onlyOwner external {
+        require(_exists[name] != true);
 
-        delete _exists[names[mates][mateId]];
-        delete names[mates][mateId];
-        delete named[mates][mateId];
+        if (named[nft][mateId] == true) {
+            _exists[names[nft][mateId]] = false;
+        } else {
+            named[nft][mateId] = true;
+        }
+
+        names[nft][mateId] = name;
+        _exists[name] = true;
+
+        emit Set(nft, mateId, msg.sender, name);
+    }
+
+    function remove(address nft, uint256 mateId) onlyHolder(nft, mateId) external {
+
+        delete _exists[names[nft][mateId]];
+        delete names[nft][mateId];
+        delete named[nft][mateId];
 
         mix.burnFrom(msg.sender, mixForDeleting);
 
-        emit Remove(mates, mateId, msg.sender);
+        emit Remove(nft, mateId, msg.sender);
     }
 }
