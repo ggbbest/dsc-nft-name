@@ -5,3 +5,8 @@
 
 ## License
 [MIT](LICENSE)
+
+
+yarn add --dev hardhat
+
+yarn hardhat compile
